@@ -123,7 +123,7 @@ const unseal=u=>crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},key,u.sl
 function token(){return new Promise((res,rej)=>{const cid=LS('cid');
  if(!window.google||!google.accounts)return rej(new Error('gsi'));
  if(!tc||tc.c!==cid){tc=google.accounts.oauth2.initTokenClient({client_id:cid,scope:SC,callback:r=>r.access_token?(tok=r.access_token,res()):rej(new Error(r.error)),error_callback:x=>rej(new Error(x.type))});tc.c=cid}
- tc.requestAccessToken({prompt:''})})}
+ tc.requestAccessToken({prompt:''});setTimeout(()=>rej(new Error('Google sign-in did not finish')),90000)})}
 async function api(u,o={}){const r=await fetch(u,{...o,headers:{...o.headers,Authorization:'Bearer '+tok}});
  if(r.status===401&&!o.r){await token();return api(u,{...o,r:1})}
  if(!r.ok)throw new Error(r.status);return r}
@@ -140,7 +140,7 @@ $('gf').onsubmit=async ev=>{ev.preventDefault();err('');
  if(!LS('cid'))return err('Paste your Google Client ID once (see setup guide).');
  const pw=$('pw').value;if(!pw)return err('Enter your password.');
  $('gb').disabled=true;
- try{await token();const files=await list(),cfg=files.find(f=>f.name==='vault.cfg');
+ try{if(!tok)await token();const files=await list(),cfg=files.find(f=>f.name==='vault.cfg');
   if(!cfg){
    if($('pw2').classList.contains('hide')){$('pw2').classList.remove('hide');err('No vault found. Confirm a password to create one.');return}
    if(pw.length<8)return err('Use at least 8 characters.');
@@ -151,7 +151,7 @@ $('gf').onsubmit=async ev=>{ev.preventDefault();err('');
    try{await unseal(ub(j.c))}catch{key=null;return err('Wrong password.')}}
   $('pw').value=$('pw2').value='';$('gate').classList.add('hide');$('app').classList.remove('hide');
   await load();bump();
- }catch(x){err('Could not connect to Google Drive. Check the Client ID, and that your Google account is added as a test user.')}
+ }catch(x){err('Could not connect ('+(x&&x.message||'unknown')+'). Check the Client ID, the Drive API being enabled, and that your Gmail is a test user.')}
  finally{$('gb').disabled=false}};
 
 /* data */
