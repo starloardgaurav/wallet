@@ -140,7 +140,7 @@ $('gf').onsubmit=async ev=>{ev.preventDefault();err('');
  if(!LS('cid'))return err('Paste your Google Client ID once (see setup guide).');
  const pw=$('pw').value;if(!pw)return err('Enter your password.');
  $('gb').disabled=true;
- try{if(!tok)await token();const files=await list(),cfg=files.find(f=>f.name==='vault.cfg');
+ try{if(!tok){err('Waiting for Google sign-in. Finish it in the popup window (allow popups if you see no window).');await token();err('')}const files=await list(),cfg=files.find(f=>f.name==='vault.cfg');
   if(!cfg){
    if($('pw2').classList.contains('hide')){$('pw2').classList.remove('hide');err('No vault found. Confirm a password to create one.');return}
    if(pw.length<8)return err('Use at least 8 characters.');
